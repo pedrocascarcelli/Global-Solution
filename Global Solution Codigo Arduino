@@ -1,0 +1,74 @@
+#include <LiquidCrystal.h>
+
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+int Vin14 = A1, Iin1 = A3, cont = 0, i = 0;
+int V_inst = 0, I_inst = 0, Vmax = 247, Imax = 30;
+float Media = 0, Consumo[24] = {0};
+ 
+int PotInst(int V, int I){
+  return V * I;
+}
+
+void setup(){
+  Serial.begin(9600);
+  
+  lcd.begin(16, 2);
+  pinMode(Vin14,INPUT);
+  pinMode(Iin1,INPUT);
+  pinMode(8,OUTPUT);
+  
+  Serial.println("\t \t  Consumo Diario");
+  Serial.print(" W \t W \t W \t W\t W\t W\t W \t W|h \n");
+}
+
+void loop() { 
+  V_inst =  analogRead(Vin14) * (float(Vmax)/1023);
+  I_inst =  analogRead(8) * (float(Imax)/1023);
+  
+  lcd.setCursor(1, 0);
+  lcd.print("V:");
+  lcd.setCursor(3, 0);
+  lcd.print(V_inst);
+  lcd.setCursor(6, 0);
+  lcd.print("V");
+  
+  lcd.setCursor(9, 0);
+  lcd.print("I:");
+  lcd.setCursor(11, 0);
+  lcd.print(I_inst);
+  lcd.setCursor(13, 0);
+  lcd.print("A");
+  
+  lcd.setCursor(0, 1);
+  lcd.print("P");
+  lcd.setCursor(1, 1);
+  delay(5000);
+  lcd.print(PotInst(V_inst, I_inst));
+  Serial.print(PotInst(V_inst, I_inst));
+  Serial.print("\t");
+  cont++;
+  lcd.setCursor(5, 1);
+  lcd.print("W");
+  Media += PotInst(V_inst, I_inst);
+  
+  analogWrite(8, map(analogRead(A3), 0, 1023, 0, 255));
+  
+  
+  
+  if(cont==7){
+  	lcd.setCursor(7, 1);
+  	lcd.print("C");
+  	lcd.setCursor(8, 1);
+    Media = Media/cont;
+    Consumo[i] = Media;
+    lcd.print(Consumo[i], 1);
+    Serial.print(Consumo[i], 1);
+    lcd.setCursor(14, 1);
+    lcd.print("Wh");
+    i++;
+    cont=0;
+    Media = 0;
+    Serial.print("\n");
+  }
+}
